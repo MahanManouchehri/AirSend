@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>اشتراک‌گذاری موقت فایل</title>
+    <!-- CDN های Dropzone و فونت وزیر (اختیاری) -->
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@6.0.0-beta.2/dist/dropzone.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazir-font@27.0.0/dist/font-face.css" />
+    <style>
+        body { font-family: 'Vazir', sans-serif; direction: rtl; text-align: center; background: #f5f7fa; margin: 0; padding-top: 50px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 12px 28px rgba(0,0,0,0.08); }
+        h1 { color: #333; margin-bottom: 24px; }
+        .dropzone {
+            border: 3px dashed #4A90E2;
+            border-radius: 12px;
+            background: #f0f7ff;
+            padding: 40px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .dropzone:hover { background: #e4f0ff; }
+        .dz-message { font-size: 1.1em; color: #555; }
+        #result { margin-top: 30px; display: none; }
+        #downloadLink { background: #eef2ff; padding: 12px; border-radius: 8px; direction: ltr; }
+        .copy-btn { margin-top: 10px; background: #4A90E2; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+        .copy-btn:hover { background: #3a7bc8; }
+        .error { color: #d32f2f; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📤 ارسال فایل موقت</h1>
+        <p>فایل خود را بکشید و رها کنید یا کلیک کنید. لینک دانلود تا ۲۴ ساعت اعتبار دارد.</p>
+        <form action="{% url 'upload_file' %}" class="dropzone" id="myDropzone"></form>
+
+        <div id="result">
+            <p>✅ لینک دانلود شما:</p>
+            <div id="downloadLink"></div>
+            <button class="copy-btn" onclick="copyLink()">📋 کپی لینک</button>
+            <p style="margin-top:8px; font-size:0.9em;">منقضی در: <span id="expiresAt"></span></p>
+        </div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script src="https://unpkg.com/dropzone@6.0.0-beta.2/dist/dropzone-min.js"></script>
+    <script>
+        // تنظیم Dropzone با ارسال توکن CSRF
+        Dropzone.options.myDropzone = {
+            paramName: "file",
+            maxFilesize: 50, // MB
+            acceptedFiles: "", // هر نوع فایلی
+            dictDefaultMessage: "فایل را اینجا بکشید یا کلیک کنید",
+            dictFallbackMessage: "مرورگر شما از drag & drop پشتیبانی نمی‌کند.",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            init: function() {
+                this.on("success", function(file, response) {
+                    if (response.success) {
+                        document.getElementById("result").style.display = "block";
+                        document.getElementById("downloadLink").innerHTML = 
+                            "<a href='" + response.download_url + "' target='_blank'>" + response.download_url + "</a>";
+                        document.getElementById("expiresAt").textContent = response.expires_at;
+                    } else {
+                        document.getElementById("error").textContent = response.error || "خطا در آپلود";
+                    }
+                });
+                this.on("error", function(file, errorMessage, xhr) {
+                    let msg = errorMessage;
+                    if (xhr && xhr.response) {
+                        try {
+                            let resp = JSON.parse(xhr.response);
+                            msg = resp.error || msg;
+                        } catch(e) {}
+                    }
+                    document.getElementById("error").textContent = msg;
+                });
+            }
+        };
+
+        function copyLink() {
+            const link = document.querySelector("#downloadLink a").href;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("لینک کپی شد!");
+            });
+        }
+    </script>
+</body>
+</html>
