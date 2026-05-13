@@ -3,88 +3,312 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>اشتراک‌گذاری موقت فایل</title>
-    <!-- CDN های Dropzone و فونت وزیر (اختیاری) -->
-    <link rel="stylesheet" href="https://unpkg.com/dropzone@6.0.0-beta.2/dist/dropzone.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazir-font@27.0.0/dist/font-face.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirSend | ارسال امن و موقت فایل</title>
+
+    <!-- Bootstrap 5 RTL (لوکال) -->
+    <link rel="stylesheet" href="{% static 'fileshare/css/bootstrap.rtl.min.css' %}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'fileshare/css/fontawesome.min.css' %}">
+
+    <!-- فونت Vazirmatn -->
+    <link rel="stylesheet" href="{% static 'fileshare/css/fonts.css' %}">
+
+    <!-- Dropzone CSS -->
+    <link rel="stylesheet" href="{% static 'fileshare/css/dropzone.css' %}">
+
+    <!-- استایل‌های پریمیوم سفارشی (در همین فایل) -->
     <style>
-        body { font-family: 'Vazir', sans-serif; direction: rtl; text-align: center; background: #f5f7fa; margin: 0; padding-top: 50px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 12px 28px rgba(0,0,0,0.08); }
-        h1 { color: #333; margin-bottom: 24px; }
-        .dropzone {
-            border: 3px dashed #4A90E2;
-            border-radius: 12px;
-            background: #f0f7ff;
-            padding: 40px;
-            cursor: pointer;
-            transition: background 0.2s;
+        :root {
+            --bg-primary: #0f0c29;
+            --bg-secondary: #302b63;
+            --bg-tertiary: #24243e;
+            --accent: #00c6ff;
+            --accent2: #0072ff;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #fff;
         }
-        .dropzone:hover { background: #e4f0ff; }
-        .dz-message { font-size: 1.1em; color: #555; }
-        #result { margin-top: 30px; display: none; }
-        #downloadLink { background: #eef2ff; padding: 12px; border-radius: 8px; direction: ltr; }
-        .copy-btn { margin-top: 10px; background: #4A90E2; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
-        .copy-btn:hover { background: #3a7bc8; }
-        .error { color: #d32f2f; margin-top: 15px; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary));
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ذرات تزئینی پس‌زمینه */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.2); }
+        }
+
+        /* کانتینر اصلی */
+        .main-content {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* کارت شیشه‌ای */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            padding: 3rem;
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+            animation: fadeInUp 0.8s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2.4rem;
+            margin-bottom: 0.8rem;
+            background: linear-gradient(to left, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 1.05rem;
+            margin-bottom: 2.2rem;
+        }
+
+        /* ناحیه آپلود Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(255, 255, 255, 0.35);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 3rem 2rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .dropzone:hover {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.01);
+        }
+        .dropzone .dz-message {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.8);
+            margin: 0;
+        }
+        .dropzone .dz-message i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        /* نوار پیشرفت */
+        .dz-preview .dz-progress .dz-upload {
+            background: linear-gradient(to left, var(--accent2), var(--accent));
+        }
+        .dz-preview .dz-details {
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+        }
+
+        /* فوتر */
+        .footer-text {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📤 ارسال فایل موقت</h1>
-        <p>فایل خود را بکشید و رها کنید یا کلیک کنید. لینک دانلود تا ۲۴ ساعت اعتبار دارد.</p>
-        <form action="{% url 'upload_file' %}" class="dropzone" id="myDropzone"></form>
 
-        <div id="result">
-            <p>✅ لینک دانلود شما:</p>
-            <div id="downloadLink"></div>
-            <button class="copy-btn" onclick="copyLink()">📋 کپی لینک</button>
-            <p style="margin-top:8px; font-size:0.9em;">منقضی در: <span id="expiresAt"></span></p>
+<!-- ذرات تزئینی (بدون JS) -->
+<div class="particles">
+    <div class="particle" style="width: 200px; height: 200px; top: 10%; left: 5%; animation-delay: 0s;"></div>
+    <div class="particle" style="width: 150px; height: 150px; top: 70%; left: 80%; animation-delay: 3s;"></div>
+    <div class="particle" style="width: 100px; height: 100px; top: 40%; left: 40%; animation-delay: 7s;"></div>
+    <div class="particle" style="width: 250px; height: 250px; top: 80%; left: 10%; animation-delay: 11s;"></div>
+    <div class="particle" style="width: 80px; height: 80px; top: 20%; left: 70%; animation-delay: 15s;"></div>
+</div>
+
+<!-- محتوای اصلی -->
+<div class="main-content">
+    <div class="glass-card">
+        <!-- برند و توضیح -->
+        <h1>
+            <i class="fas fa-cloud-upload-alt"></i> AirSend
+        </h1>
+        <p class="subtitle">
+            فایل‌هایتان را به صورت امن و موقت ارسال کنید. <br>
+            لینک دانلود تا ۲۴ ساعت فعال خواهد ماند.
+        </p>
+
+        <!-- فرم Dropzone -->
+        <form action="{% url 'upload_file' %}" class="dropzone" id="myDropzone">
+            {% csrf_token %}
+            <div class="dz-message">
+                <i class="fas fa-file-upload"></i><br>
+                فایل خود را اینجا بکشید و رها کنید<br>
+                <span style="font-size:0.85rem; opacity:0.7;">(یا کلیک کنید و انتخاب کنید)</span>
+            </div>
+        </form>
+
+        <!-- لینک دانلود (در ابتدا مخفی، بعداً با JS نمایش داده می‌شود) -->
+        <div id="result" class="mt-4" style="display: none;">
+            <div class="alert alert-success d-flex align-items-center justify-content-between" style="background: rgba(0,198,255,0.1); border:1px solid rgba(0,198,255,0.3); border-radius: 12px;">
+                <div>
+                    <i class="fas fa-check-circle me-2"></i> لینک دانلود آماده شد
+                </div>
+                <button class="btn btn-sm btn-outline-light" id="copyLinkBtn">
+                    <i class="fas fa-copy"></i> کپی
+                </button>
+            </div>
+            <small class="text-muted d-block mt-2">منقضی‌شده در: <span id="expiresAt"></span></small>
         </div>
-        <div id="error" class="error"></div>
     </div>
+</div>
 
-    <script src="https://unpkg.com/dropzone@6.0.0-beta.2/dist/dropzone-min.js"></script>
-    <script>
-        // تنظیم Dropzone با ارسال توکن CSRF
-        Dropzone.options.myDropzone = {
-            paramName: "file",
-            maxFilesize: 50, // MB
-            acceptedFiles: "", // هر نوع فایلی
-            dictDefaultMessage: "فایل را اینجا بکشید یا کلیک کنید",
-            dictFallbackMessage: "مرورگر شما از drag & drop پشتیبانی نمی‌کند.",
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            init: function() {
-                this.on("success", function(file, response) {
-                    if (response.success) {
-                        document.getElementById("result").style.display = "block";
-                        document.getElementById("downloadLink").innerHTML = 
-                            "<a href='" + response.download_url + "' target='_blank'>" + response.download_url + "</a>";
-                        document.getElementById("expiresAt").textContent = response.expires_at;
-                    } else {
-                        document.getElementById("error").textContent = response.error || "خطا در آپلود";
-                    }
-                });
-                this.on("error", function(file, errorMessage, xhr) {
-                    let msg = errorMessage;
-                    if (xhr && xhr.response) {
-                        try {
-                            let resp = JSON.parse(xhr.response);
-                            msg = resp.error || msg;
-                        } catch(e) {}
-                    }
-                    document.getElementById("error").textContent = msg;
-                });
-            }
-        };
+<!-- فوتر ساده -->
+<div class="footer-text">
+    Made with ❤️ by Mahan | نسخه آزمایشی
+</div>
 
-        function copyLink() {
-            const link = document.querySelector("#downloadLink a").href;
-            navigator.clipboard.writeText(link).then(() => {
-                alert("لینک کپی شد!");
+<!-- کتابخانه‌های JS (همه لوکال) -->
+<script src="{% static 'fileshare/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'fileshare/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'fileshare/js/dropzone-min.js' %}"></script>
+<script src="{% static 'fileshare/js/sweetalert2.all.min.js' %}"></script>
+
+<!-- اسکریپت‌های اختصاصی -->
+<script>
+    // تنظیم Dropzone
+    Dropzone.options.myDropzone = {
+        paramName: "file",
+        maxFilesize: 50, // MB
+        acceptedFiles: "",
+        dictDefaultMessage: "",
+        dictFallbackMessage: "مرورگر شما از کشیدن و رها کردن پشتیبانی نمی‌کند.",
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        init: function() {
+            this.on("success", function(file, response) {
+                if (response.success) {
+                    // نمایش ناحیه نتیجه
+                    $("#result").fadeIn();
+                    $("#expiresAt").text(response.expires_at);
+
+                    // ذخیره لینک داخل دکمه کپی
+                    $("#copyLinkBtn").attr("data-url", response.download_url);
+
+                    // نوتیفیکیشن شیرین
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'آپلود با موفقیت انجام شد!',
+                        html: `<p>لینک دانلود شما:</p>
+                               <div style="background: #eee; padding: 10px; border-radius: 8px; direction: ltr; word-break: break-all; margin-top: 10px;">
+                                   <a href="${response.download_url}" target="_blank">${response.download_url}</a>
+                               </div>`,
+                        confirmButtonText: 'باشه',
+                        confirmButtonColor: '#0072ff',
+                        focusConfirm: false,
+                        customClass: {
+                            popup: 'rounded-4'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطا',
+                        text: response.error || 'مشکلی رخ داد',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            });
+
+            this.on("error", function(file, errorMessage, xhr) {
+                let msg = errorMessage;
+                if (xhr && xhr.response) {
+                    try {
+                        let resp = JSON.parse(xhr.response);
+                        msg = resp.error || msg;
+                    } catch(e) {}
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'آپلود ناموفق',
+                    text: msg,
+                    confirmButtonColor: '#d33'
+                });
             });
         }
-    </script>
+    };
+
+    // کپی لینک با کلیک دکمه
+    $(document).on('click', '#copyLinkBtn', function(){
+        var url = $(this).data('url');
+        if (url) {
+            navigator.clipboard.writeText(url).then(() => {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'bottom-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    background: '#24243e',
+                    color: '#fff',
+                    customClass: {
+                        popup: 'rounded-3'
+                    }
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'لینک در کلیپ‌بورد کپی شد!'
+                });
+            }).catch(() => {
+                alert('لطفاً دستی کپی کنید:\n' + url);
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

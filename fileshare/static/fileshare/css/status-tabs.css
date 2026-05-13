@@ -1,0 +1,174 @@
+/* ==================== استایل‌های کوچک‌تر برای تب‌ها ==================== */
+.status-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gray);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.status-tab {
+    padding: 8px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    border: 1px solid transparent;
+    background: var(--gray-light);
+    cursor: pointer;
+}
+
+.status-tab i {
+    font-size: 14px;  /* کوچک‌تر شدن آیکون تب */
+}
+
+.status-tab:hover {
+    background: var(--gray);
+    color: var(--primary-color);
+    border-color: #dee2e6;
+}
+
+.status-tab.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 3px 10px rgba(67, 97, 238, 0.2);
+}
+
+.tab-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* ==================== استایل‌های کوچک‌تر برای کارت‌های آمار ==================== */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--gray);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 15px 20px;
+    transition: all 0.3s ease;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--card-color-start), var(--card-color-end));
+    border-radius: 0 12px 12px 0;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-info h3 {
+    font-size: 24px;  /* کوچک‌تر شدن عدد آمار */
+    color: var(--dark);
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.stat-label {
+    color: var(--gray-dark);
+    font-size: 12px;  /* کوچک‌تر شدن متن برچسب */
+    font-weight: 500;
+}
+
+.stat-icon {
+    width: 45px;  /* کوچک‌تر شدن باکس آیکون */
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;  /* کوچک‌تر شدن خود آیکون */
+    color: white;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--card-color-start), var(--card-color-end));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* کلاس‌های رنگ‌بندی کارت‌ها (بدون تغییر) */
+.stat-total { --card-color-start: #667eea; --card-color-end: #764ba2; }
+.stat-active { --card-color-start: var(--success-color); --card-color-end: #059669; }
+.stat-deleted { --card-color-start: var(--danger-color); --card-color-end: #c82333; }
+.stat-today { --card-color-start: var(--info-color); --card-color-end: #1d4ed8; }
+
+.filter-header {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.filter-header:hover {
+    background: linear-gradient(90deg, #e9ecef, #dee2e6);
+}
+
+.filter-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.filter-header i:last-child {
+    pointer-events: none;
+}
+
+/* انیمیشن برای باز و بسته شدن */
+.filter-body {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+/* اگر می‌خواهید انیمیشن اسلاید داشته باشید */
+.filter-body {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
