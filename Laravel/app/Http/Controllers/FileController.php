@@ -2,89 +2,93 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
+
+use App\Models\File;
 
 class FileController extends Controller
 {
     /**
-     * نمایش صفحه آپلود
+     * صفحه آپلود + تاریخچه
      */
-    public function create()
+    public function create(Request $request)
     {
-        return view('upload');
+        $userToken = $request->cookie('uploader_token');
+        $files = File::where('user_token', $userToken)
+                     ->orderByDesc('created_at')
+                     ->get();
+
+        return view('upload', compact('files'));
     }
 
     /**
-     * پردازش آپلود فایل
+     * دریافت و ذخیره فایل
      */
     public function store(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:20480', // حداکثر 20 مگابایت
+            'file' => 'required|file|max:20480', // 20MB
         ]);
 
         $uploadedFile = $request->file('file');
 
-        // ساخت نام یکتا برای ذخیره در سرور
         $storedName = time() . '_' . Str::random(10) . '.' . $uploadedFile->getClientOriginalExtension();
+        $uploadedFile->storeAs('files', $storedName, 'local');
 
-        // ذخیره فایل در دیسک local (پوشه storage/app/private/files)
-        $path = $uploadedFile->storeAs('files', $storedName, 'local');
-
-        // تولید هش یکتا برای لینک اشتراک‌گذاری
         $hash = Str::random(16);
         while (File::where('unique_hash', $hash)->exists()) {
             $hash = Str::random(16);
         }
 
-        // ذخیره اطلاعات در دیتابیس
+        $userToken = $request->cookie('uploader_token');
+
         $file = File::create([
             'original_name' => $uploadedFile->getClientOriginalName(),
             'stored_name'   => $storedName,
             'unique_hash'   => $hash,
             'size'          => $uploadedFile->getSize(),
-            'expires_at'    => now()->addHours(24), // ۲۴ ساعت اعتبار
+            'expires_at'    => now()->addDays(3),
+            'user_token'    => $userToken,
         ]);
 
-        // پاسخ JSON برای Dropzone
         return response()->json([
-            'success'      => true,
-            'message'      => 'فایل با موفقیت آپلود شد.',
-            'download_url' => route('file.show', $hash),
-            'expires_at'   => $file->expires_at->toDateTimeString(),
+            'success'       => true,
+            'message'       => 'فایل با موفقیت آپلود شد.',
+            'download_url'  => route('file.show', $hash),
+            'expires_at'    => $file->expires_at->toDateTimeString(),
+            'file' => [
+                'original_name'        => $file->original_name,
+                'size'                 => $file->size,
+                'hash'                 => $file->unique_hash,
+                'expires_at_formatted' => $file->expires_at->format('Y/m/d H:i'),
+            ],
         ]);
     }
 
     /**
-     * نمایش صفحه دانلود
+     * نمایش لینک دانلود
      */
     public function show($hash)
     {
         $file = File::where('unique_hash', $hash)->firstOrFail();
-
         if ($file->isExpired()) {
             return view('expired');
         }
-
         return view('download', compact('file'));
     }
 
     /**
-     * ارسال فایل برای دانلود
+     * خروجی فایل برای دانلود
      */
     public function download($hash)
     {
         $file = File::where('unique_hash', $hash)->firstOrFail();
-
         if ($file->isExpired()) {
             abort(410, 'لینک منقضی شده است.');
         }
 
         $path = storage_path('app/private/files/' . $file->stored_name);
-
         if (!file_exists($path)) {
             abort(404);
         }

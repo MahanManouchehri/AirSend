@@ -12,6 +12,8 @@ class File extends Model
         'unique_hash',
         'size',
         'expires_at',
+        'user_token',
+
     ];
 
     public function isExpired(): bool

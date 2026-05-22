@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Configuration\{Exceptions, Middleware};
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,7 +10,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->web(append: [
+            \App\Http\Middleware\AssignUserToken::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
